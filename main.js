@@ -1,8 +1,9 @@
-window.addEventListener("load", ()=> {
-    let layoutProducts = document.querySelector(".layout__products");
-    let layoutCart = document.querySelector(".layout__cart");
-    let cartProducts = document.querySelector(".cart__products");
-
+let totalPrice = document.querySelector(".total__price")
+let layoutProducts = document.querySelector(".layout__products");
+let layoutCart = document.querySelector(".layout__cart");
+let cartProducts = document.querySelector(".cart__products");
+let closeBtn = document.querySelector(".cart__ico");
+let cartBtn = document.querySelector(".cart__btn");
 
 let products = [
     {
@@ -37,6 +38,31 @@ let products = [
 
 let cart = [];
 
+function removeCart(id) {
+    let cartProductIndex = cart.findIndex(productCart => productCart.id == id);
+
+    if (cartProductIndex !== -1) {
+        cart[cartProductIndex].quantity--;
+        if (cart[cartProductIndex].quantity <= 0) {
+            cart.splice(cartProductIndex, 1);
+        }
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    showCart();
+}
+
+function getTotal(){
+    let total = 0;
+    cart.forEach(productCart => {
+        let product = findProduct(productCart.id)
+        let subtotal = product.price * productCart.quantity;
+
+        total += subtotal;
+    })
+    return total.toFixed(2);
+}
+
 function showCart(){
     if(cart.length > 0){
         layoutCart.classList.remove("layout__cart--hide");
@@ -59,10 +85,37 @@ function showCart(){
                             <span class="btn-quantity__number">${cartProduct.quantity}</span>
                             <i class="btn-quantity__ico-plus fa-solid fa-plus" data-id="${product.id}"></i>
                         </button>
-                        <p class="cart__subtotal">${subtotal}</p>
+                        <p class="cart__subtotal">$${Math.trunc(subtotal * 100)/100}</p>
                     </div>
 
-                </article>`
+                </article>`;
+        let total = getTotal();
+        totalPrice.textContent = "$" + total;
+
+        let iconsMinus = document.querySelectorAll(".btn-quantity__ico-minus");
+
+        iconsMinus.forEach(ico => {
+            ico.addEventListener("click", () => {
+                let productId = ico.getAttribute("data-id");
+
+                removeCart(productId);
+
+                showCart();
+            })
+        })
+
+        let iconsPlus = document.querySelectorAll(".btn-quantity__ico-plus");
+
+        iconsPlus.forEach(ico => {
+            ico.addEventListener("click", () => {
+                let productId = ico.getAttribute("data-id");
+
+                addCart(productId);
+
+                showCart();
+            })
+        })
+
     })
 }
 
@@ -137,15 +190,30 @@ function showProducts(){
 
             if(product.stock > 0){
                 addCart(productId);
-            }
-
+                showCart();
+             }
+            
         })
     })
 
-}
+};
+
+closeBtn.addEventListener("click", () => {
+    layoutCart.classList.add("layout__cart--hide"
+ )
+ });
+ 
+cartBtn.addEventListener("click", () => {
+    cart = [];
+    localStorage.removeItem("cart");
+    localStorage.clear();
+    layoutCart.classList.add("layout__cart--hide")
+
+
+});
+
 
 showProducts();
 loadCart();
 showCart();
-})
 
